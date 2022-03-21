@@ -6,9 +6,9 @@ import { useDispatch } from 'react-redux'
 export default function Productitem({product}) {
   const dispatch = useDispatch()
 
-  const addCart = (id) =>{
-    const checkExists = add_to_cart(id,'single');
-    if(!checkExists){
+  const addCart = async (id) =>{
+    const checkExists = await add_to_cart(id,'single');
+    if(checkExists){
       alert("Product Already Exits in Cart")
     }else{
       window.scrollTo(0, 0)

@@ -44,10 +44,10 @@ export async function addData(name,phone,gender,password){
 
 
 
-export async function loginData(email, password){
+export async function loginData(phone, password){
     try {
         const res = await Axios.post('users/login', {
-            email,
+            phone,
             password
           });
           if(res.status === 200){

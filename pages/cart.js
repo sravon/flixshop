@@ -1,9 +1,8 @@
 import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
-import { increaseQuantity, loadGuestCart, removeCart } from '../helpers/cart'
+import { increaseQuantity, loadGuestCart, loadUserCart, logUserCart, removeCart } from '../helpers/cart'
 import { ADD_TO_CART, initialLoad } from '../redux/feaures/cartitem'
-import { useDispatch } from 'react-redux'
-import { useSelector } from 'react-redux'
+import { useDispatch,useSelector } from 'react-redux'
 
 export default function() {
   const logUser = useSelector((state) => state.user.isLoggedIn)
@@ -12,12 +11,16 @@ export default function() {
   const dispatch = useDispatch()
   
   useEffect(async () => {
-    const data = await loadGuestCart()
+
+    const data = (logUser)? await loadUserCart() : loadGuestCart()
+    
+    console.log(logUser)
     setitems(data)
     
-  }, [])
+  }, [logUser])
   
   const plusMinusItemInCart = (item,quantity) =>{
+
     increaseQuantity(item,quantity);
     dispatch(ADD_TO_CART({id:item.id,quantity: quantity}));
   }

@@ -3,30 +3,35 @@ import { useRouter } from 'next/router';
 import React,{useRef,useContext} from 'react';
 import { loginData } from '../helpers/api-util';
 import Seotag from '../components/Seotag';
+import { setuser } from '../redux/feaures/userdata'
+import { useDispatch,useSelector } from 'react-redux'
+import { logUserCart } from '../helpers/cart';
+import { ADD_TO_CART } from '../redux/feaures/cartitem';
 
 export default function Login() {
+    const logUser = useSelector((state) => state.user.user)
+    const dispatch = useDispatch()
     const router = useRouter()
-    const emailInputRef = useRef();
+    const phoneInputRef = useRef();
     const passwordInputRef = useRef();
-
+    
     async function switchAuthModeHandler(e) {
         e.preventDefault()
-        const selectEmail = emailInputRef.current.value;
+        const selectphone = phoneInputRef.current.value;
         const selectPass = passwordInputRef.current.value;
-        console.log(selectEmail+ " " + selectPass)
-        const result = await loginData(selectEmail,selectPass)
+        console.log(selectphone+ " " + selectPass)
+        const result = await loginData(selectphone,selectPass)
         if(result){
             if (result.status) {
-            console.log(result.user + "    " + result.token)
-            createUser.setUser(result.user)
-            fetch("/api/login", {
-                method: "POST",
-                headers: {
-                "Content-Type": "application/json",
-                },
-                body:JSON.stringify({ token: result.token })
-            })
-            router.push("/")
+                localStorage.setItem("token", result.token)
+                dispatch(setuser(result.user))
+                const data = await logUserCart()
+                if(data.length > 0){
+                    data.forEach(item => {
+                        dispatch(ADD_TO_CART({id:item.id,quantity: item.quantity}));
+                    });
+                }
+                router.push("/")
             } else {
                 alert(result.error)
             }
@@ -46,7 +51,7 @@ export default function Login() {
                                 <label className="mr-10 font-bold w-1/5" htmlFor="">Email</label>
                                 <input
                                     className="md:w-4/5 sm:w-full border-2 border-gray-400 p-3 outline-none focus:border-blue-400"
-                                    type="email" name="email" ref={emailInputRef} />
+                                    type="text" maxLength={11} name="phone" ref={phoneInputRef} />
                             </div>
                             <div className="flex flex-col sm:flex-row">
                             <label className="mr-2 font-bold w-1/4" htmlFor="">Password</label>

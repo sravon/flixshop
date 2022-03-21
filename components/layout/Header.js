@@ -1,26 +1,63 @@
 import Image from "next/image";
-import Headeritem from "./Headeritem";
+import { useRouter } from 'next/router';
 import {
     SearchIcon, HeartIcon, ChevronDownIcon, ShoppingCartIcon, UserIcon, LoginIcon
 } from "@heroicons/react/outline"
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from 'react-redux'
 import { useDispatch } from 'react-redux'
 import { initialLoad } from "../../redux/feaures/cartitem";
+import { setuser,logoutuser } from "../../redux/feaures/userdata";
+import { loadUserCart } from "../../helpers/cart";
+import Axios from "../../Axios/Axios";
 
 
 export default function Header() {
+    const router = useRouter()
+    const [toggle, setToggle] = useState(false)
     const logUser = useSelector((state) => state.user.isLoggedIn)
     const cartitem = useSelector((state) => state.cart.product)
     const dispatch = useDispatch()
-    useEffect(() => {
-        const items = JSON.parse(localStorage.getItem("cart"));
-        if(items !== null){
-            dispatch(initialLoad(items))
+    useEffect(async () => {
+        const token = localStorage.getItem("token");
+        if(token){
+            const headers = {
+                Authorization: "Bearer " + token,
+            };
+            const response = await Axios("/users/login_userdata", { headers });
+            if (response.status == 200) {
+                dispatch(setuser(response.data));
+                const items= await loadUserCart()
+                dispatch(initialLoad(items))
+            }
+        }else{
+            const items = JSON.parse(localStorage.getItem("cart"));
+            if(items !== null){
+                dispatch(initialLoad(items))
+            }
         }
         
     }, [])
+
+    const logout = async () =>{
+        const token  = localStorage.getItem('token')
+        if(token){
+            const headers = {
+                Authorization: "Bearer " + token
+            }
+
+            const response = await Axios.get('users/logout',{headers});
+            if(response.status == 200){
+                console.log(response);
+                dispatch(logoutuser())
+                localStorage.removeItem("token")
+                router.push("/login")
+            }else if(response.status == 201){
+                console.log(response);
+            }
+        }
+    }
     
     
     return (
@@ -65,8 +102,7 @@ export default function Header() {
                                     <ShoppingCartIcon className="h-6 mb-1"/>
                                     <p className="text-xs rounded-full bg-yellow-900 
                                         text-white p-1 absolute top-3 left-3">
-                                        {logUser?0:
-                                        cartitem.length}
+                                        {cartitem.length}
                                     </p>
                                 </a>
                             </Link>
@@ -84,13 +120,13 @@ export default function Header() {
                         </div>
                     {logUser?
 						<div className="cursor-pointer group relative">
-                            <div className=" rounded bg-white">
+                            <div className=" rounded bg-white" onClick={()=> setToggle(!toggle)}>
                                 <ChevronDownIcon className="h-6 mb-1"/>
                             </div>
-                            <div className="hidden absolute top-6 right-0 flex flex-col w-40 bg-slate-200 p-3">
+                            <div className={( (toggle)? 'flex' : 'hidden') + " absolute top-6 right-0 flex flex-col w-40 bg-slate-200 p-3"} >
                                 <p className="border-b-2 border-red-900 w-full text-center p-2">dfdffdf</p>
                                 <p className="border-b-2 border-red-900 w-full text-center p-2">dfdffdf</p>
-                                <p className="border-b-2 border-red-900 w-full text-center p-2">dfdffdf</p>
+                                <button onClick={() => logout()} className="border-b-2 border-red-900 w-full text-center p-2">Logout</button>
                             </div>
                         </div>
                         :
